@@ -305,7 +305,7 @@
                 const selectedVariation = $variationSelect.val();
                 if (!selectedCategory || !selectedOpening || !selectedVariation) { alert("Please select a complete opening line."); return; }
                 currentOpeningMoves = openingBook[selectedCategory][selectedOpening][selectedVariation];
-                const boardConfig = { draggable: true, position: 'start', onDrop: onDrop, orientation: playerColor === 'w' ? 'white' : 'black', pieceTheme: 'chesspieces/wikipedia/{piece}.png' };
+                const boardConfig = { draggable: true, position: 'start', onDrop: onDrop, orientation: playerColor === 'w' ? 'white' : 'black', pieceTheme: '{piece}.png' };
                 $('#myBoard').empty();
                 board = Chessboard('myBoard', boardConfig);
                 $(window).off('resize').on('resize', board.resize);
@@ -327,7 +327,7 @@
             });
 
             populateCategories();
-            const initialConfig = { position: 'start', pieceTheme: 'chesspieces/wikipedia/{piece}.png' };
+            const initialConfig = { position: 'start', pieceTheme: '{piece}.png' };
             board = Chessboard('myBoard', initialConfig);
             $(window).resize(board.resize);
         });
@@ -335,3 +335,4 @@
 
 </body>
 </html>
+
