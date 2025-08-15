@@ -206,7 +206,7 @@
         /* Specific button styles */
         .start-btn {
             background: linear-gradient(135deg, #238636 0%, #2EA043 100%);
-            border-color: #2EA043;
+             border-color: #2EA043;
             font-weight: 600;
         }
 
@@ -373,12 +373,17 @@
 
         .arrow line {
             stroke: rgba(239, 68, 68, 0.8);
-            stroke-width: 14;
+            stroke-width: 10;
             stroke-linecap: round;
         }
 
         .arrow polygon {
             fill: rgba(239, 68, 68, 0.8);
+        }
+
+        /* Make sure board container is set to relative positioning */
+        #myBoard {
+            position: relative;
         }
 
         /* Animations */
@@ -636,13 +641,13 @@
             </section>
 
             <section class="board-section" aria-labelledby="game-status-heading">
-                <div id="status" class="w-full p-4 mb-4 bg-slate-800 rounded-lg text-center shadow-md">
-                    <h2 id="game-status-heading" class="sr-only">Game Status</h2>
-                    <p class="font-semibold text-xl" id="status-opening">Welcome!</p>
-                    <p class="text-md text-slate-400" id="status-move">Select an opening and start your practice.</p>
-                    <div id="evaluation-display" class="mt-2 text-sm"></div>
-                    <div id="selection-info" class="mt-2 text-sm text-blue-400" style="display: none;"></div>
-                </div>
+                        <div id="status" class="w-full p-4 mb-4 bg-slate-800 rounded-lg text-center shadow-md">
+            <h2 id="game-status-heading" class="sr-only">Game Status</h2>
+            <p class="font-semibold text-xl" id="status-opening">Welcome!</p>
+            <p class="text-md text-slate-400" id="status-move">Select an opening and start your practice.</p>
+            <div id="evaluation-display" class="mt-2 text-sm"></div>
+            <div id="selection-info" class="mt-2 text-sm text-blue-400" style="display: none;"></div>
+        </div>
                 <div class="board-container">
                     <div id="myBoard" class="w-full rounded-lg shadow-2xl"></div>
                     <div class="tips-section">
@@ -705,6 +710,9 @@
             const $startTwoPlayerBtn = $('#start-bot-btn');
             const $evaluationDisplay = $('#evaluation-display');
             const $selectionInfo = $('#selection-info');
+            
+            // Ensure board has relative positioning for proper arrow alignment
+            $boardElement.css('position', 'relative');
 
             // --- Opening Book Data ---
             const openingBook = {
@@ -890,6 +898,8 @@
              */
             function clearArrow() {
                 $('.arrow').remove();
+                // Also clean up any arrowhead markers that might be left in defs
+                $('defs').find('[id^="arrowhead-"]').remove();
             }
 
             /**
@@ -900,38 +910,45 @@
             function drawArrow(from, to) {
                 clearArrow();
                 const boardElement = $('#myBoard');
-                const fromSquare = boardElement.find('.square-' + from);
-                const toSquare = boardElement.find('.square-' + to);
-
-                if (!fromSquare.length || !toSquare.length) {
-                    console.error('Could not find squares for arrow', from, to);
-                    return;
-                }
-
-                const fromOffset = fromSquare.offset();
-                const toOffset = toSquare.offset();
-                const boardOffset = boardElement.offset();
-
-                const fromX = fromOffset.left + fromSquare.width() / 2 - boardOffset.left;
-                const fromY = fromOffset.top + fromSquare.height() / 2 - boardOffset.top;
-                const toX = toOffset.left + toSquare.width() / 2 - boardOffset.left;
-                const toY = toOffset.top + toSquare.height() / 2 - boardOffset.top;
+                const boardPosition = boardElement.position();
+                const boardRect = boardElement[0].getBoundingClientRect();
+                const squareWidth = boardRect.width / 8;
+                const squareHeight = boardRect.height / 8;
+                
+                // Convert algebraic notation to coordinates
+                const fromFile = from.charCodeAt(0) - 'a'.charCodeAt(0);
+                const fromRank = 8 - parseInt(from.charAt(1));
+                const toFile = to.charCodeAt(0) - 'a'.charCodeAt(0);
+                const toRank = 8 - parseInt(to.charAt(1));
+                
+                // Calculate centers based on square position within the board
+                const fromX = (fromFile + 0.5) * squareWidth;
+                const fromY = (fromRank + 0.5) * squareHeight;
+                const toX = (toFile + 0.5) * squareWidth;
+                const toY = (toRank + 0.5) * squareHeight;
 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.setAttribute('class', 'arrow');
-                svg.setAttribute('width', boardElement.width());
-                svg.setAttribute('height', boardElement.height());
+                svg.setAttribute('width', boardRect.width);
+                svg.setAttribute('height', boardRect.height);
+                svg.style.position = 'absolute';
+                svg.style.top = '0';
+                svg.style.left = '0';
+                
+                // Create unique ID for this arrow's marker to avoid conflicts
+                const markerId = 'arrowhead-' + Date.now();
 
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-                marker.setAttribute('id', 'arrowhead');
-                marker.setAttribute('markerWidth', '5');
-                marker.setAttribute('markerHeight', '3.5');
-                marker.setAttribute('refX', '5');
-                marker.setAttribute('refY', '1.75');
+                marker.setAttribute('id', markerId);
+                marker.setAttribute('markerWidth', '10');
+                marker.setAttribute('markerHeight', '7');
+                marker.setAttribute('refX', '7');
+                marker.setAttribute('refY', '3.5');
                 marker.setAttribute('orient', 'auto');
+                
                 const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                polygon.setAttribute('points', '0 0, 5 1.75, 0 3.5');
+                polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
                 marker.appendChild(polygon);
                 defs.appendChild(marker);
                 svg.appendChild(defs);
@@ -941,7 +958,7 @@
                 line.setAttribute('y1', fromY);
                 line.setAttribute('x2', toX);
                 line.setAttribute('y2', toY);
-                line.setAttribute('marker-end', 'url(#arrowhead)');
+                line.setAttribute('marker-end', 'url(#' + markerId + ')');
                 svg.appendChild(line);
 
                 boardElement.append(svg);
@@ -1223,136 +1240,634 @@
                 }
             }
 
-            /**
-             * Makes a computer move after the opening book is complete.
-             * Uses simple move selection based on available legal moves.
-             */
-            function makeComputerMove() {
-                if (game.game_over()) {
-                    handleGameOver();
-                    return;
+            // --- Chess Master Engine: Advanced Opening Book + Strong Search ---
+            const ENGINE_CONFIG = {
+                maxDepth: 6,
+                maxThinkTimeMs: 1000,
+                quiescenceMaxDepth: 10,
+                enableQuiescence: true,
+                useOpeningBook: true,
+                useEndgameTablebase: true
+            };
+            
+            // Opening book for common positions
+            const openingBookMoves = {
+                // Starting position
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -": ["e4", "d4", "Nf3"],
+                // After 1.e4
+                "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3": ["c5", "e5", "e6", "c6"],
+                // After 1.d4
+                "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3": ["Nf6", "d5", "e6"],
+                // Common Sicilian
+                "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6": ["Nf3", "Nc3"],
+                // Common e5 response
+                "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6": ["Nf3", "Bc4"]
+            };
+            
+            // Endgame tablebase for common positions
+            const endgameTablebase = {
+                // King and queen vs king
+                "K and Q vs K": (fen) => {
+                    // Logic to find optimal moves in KQ vs K endgames
+                    return null; // Will use search if no tablebase move found
+                },
+                // King and rook vs king
+                "K and R vs K": (fen) => {
+                    // Logic for KR vs K endgames
+                    return null;
                 }
-                if (game.turn() === playerColor) {
-                    return; // Not computer's turn
-                }
+            };
+            
+            let tt = new Map(); // Transposition table keyed by FEN
+            let killerMoves = {}; // ply -> [{from,to,promotion}, {..}]
+            let historyHeuristic = {}; // key "from_to" -> score
+            let searchAbortTime = 0;
+            let searchAborted = false;
+            let nodesVisited = 0;
+            
+            // Store best moves found to avoid repeating search
+            let cachedBestMoves = new Map();
 
-                const moveResult = findAndPlayBestMove(2);
-                if (moveResult) {
-                    board.position(game.fen());
-                    updateHighlights();
-                    updateStatus(`Computer plays: ${moveResult.san}`);
-                    if (!game.game_over()) {
-                        if (game.turn() === playerColor) {
-                            updateStatus('Your turn.');
-                        } else {
-                            setTimeout(makeComputerMove, 500);
-                        }
-                    } else {
-                        handleGameOver();
-                    }
-                }
+            function resetSearchState() {
+                tt.clear();
+                killerMoves = {};
+                historyHeuristic = {};
+                searchAborted = false;
+                nodesVisited = 0;
             }
 
-            // Advanced move search with minimax + alpha-beta and a lightweight eval
-            function findAndPlayBestMove(searchDepth) {
-                const bestMove = searchBestMove(searchDepth);
-                if (!bestMove) return null;
-                return game.move(bestMove);
+            const INF = 1e9;
+            const MATE_SCORE = 1000000;
+            const PIECE_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+
+            function pieceSquareScore(piece, fileIdx, rankIdx, isEndgame) {
+                // Simple piece-square tables (center preference); values are modest
+                const centerBonus = ([3,4].includes(fileIdx) && [3,4].includes(rankIdx)) ? 10 : 0;
+                if (piece.type === 'p') return 5 * (piece.color === 'w' ? rankIdx : (7 - rankIdx)) + centerBonus;
+                if (piece.type === 'n') return 5 + centerBonus * 2;
+                if (piece.type === 'b') return 5 + centerBonus * 2;
+                if (piece.type === 'r') return 2 + centerBonus;
+                if (piece.type === 'q') return centerBonus;
+                if (piece.type === 'k') return isEndgame ? centerBonus * 2 : 0;
+                return 0;
             }
 
-            function searchBestMove(depth) {
-                const isMaximizing = game.turn() === 'w';
-                let bestEval = isMaximizing ? -Infinity : Infinity;
-                let bestMove = null;
-                const moves = game.moves({ verbose: true });
-
-                // Move ordering: prefer captures and checks
-                moves.sort((a, b) => scoreMoveHeuristic(b) - scoreMoveHeuristic(a));
-
-                for (const move of moves) {
-                    game.move(move);
-                    const evalScore = minimax(depth - 1, -Infinity, Infinity, !isMaximizing);
-                    game.undo();
-                    if (isMaximizing) {
-                        if (evalScore > bestEval) { bestEval = evalScore; bestMove = move; }
-                    } else {
-                        if (evalScore < bestEval) { bestEval = evalScore; bestMove = move; }
+            function isEndgameLike() {
+                // Rough heuristic: endgame if queens are off or total material < threshold
+                let total = 0;
+                for (let r = 1; r <= 8; r++) {
+                    for (let f = 0; f < 8; f++) {
+                        const sq = 'abcdefgh'[f] + r;
+                        const pc = game.get(sq);
+                        if (!pc) continue;
+                        total += (PIECE_VALUES[pc.type] || 0);
                     }
                 }
-                return bestMove;
+                return total < 2000 || !game.fen().includes('q');
             }
 
-            function minimax(depth, alpha, beta, isMaximizing) {
-                if (depth === 0 || game.game_over()) {
-                    return evaluateBoard();
-                }
-
-                const moves = game.moves({ verbose: true });
-                // Move ordering: prefer captures and checks
-                moves.sort((a, b) => scoreMoveHeuristic(b) - scoreMoveHeuristic(a));
-
-                if (isMaximizing) {
-                    let maxEval = -Infinity;
-                    for (const move of moves) {
-                        game.move(move);
-                        const evalChild = minimax(depth - 1, alpha, beta, false);
-                        game.undo();
-                        if (evalChild > maxEval) maxEval = evalChild;
-                        if (evalChild > alpha) alpha = evalChild;
-                        if (beta <= alpha) break;
-                    }
-                    return maxEval;
-                } else {
-                    let minEval = Infinity;
-                    for (const move of moves) {
-                        game.move(move);
-                        const evalChild = minimax(depth - 1, alpha, beta, true);
-                        game.undo();
-                        if (evalChild < minEval) minEval = evalChild;
-                        if (evalChild < beta) beta = evalChild;
-                        if (beta <= alpha) break;
-                    }
-                    return minEval;
-                }
-            }
-
-            function evaluateBoard() {
-                // Material + simple positional bonuses
-                const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+            function staticEvaluate() {
+                // Material, piece-square tables, mobility, king safety, pawn structure
                 let score = 0;
+                const endgame = isEndgameLike();
+                
+                // Piece values and positioning
                 for (let rank = 1; rank <= 8; rank++) {
                     for (let file = 0; file < 8; file++) {
                         const square = 'abcdefgh'[file] + rank;
                         const piece = game.get(square);
                         if (!piece) continue;
                         const sign = piece.color === 'w' ? 1 : -1;
-                        score += sign * (pieceValues[piece.type] || 0);
-                        // Center control bonus
-                        if (['d4','e4','d5','e5'].includes(square)) score += sign * 10;
+                        score += sign * ((PIECE_VALUES[piece.type] || 0) + pieceSquareScore(piece, file, rank - 1, endgame));
                     }
                 }
-                // Check status bonuses
+                
+                // Mobility - more moves is better
+                const mobilityWhite = countMovesFor('w');
+                const mobilityBlack = countMovesFor('b');
+                score += 2 * (mobilityWhite - mobilityBlack);
+                
+                // King safety - penalize exposed king
+                const whiteKingSquare = findKing('w');
+                const blackKingSquare = findKing('b');
+                if (whiteKingSquare && blackKingSquare) {
+                    const whiteKingSafety = evaluateKingSafety(whiteKingSquare, 'w', endgame);
+                    const blackKingSafety = evaluateKingSafety(blackKingSquare, 'b', endgame);
+                    score += whiteKingSafety - blackKingSafety;
+                }
+                
+                // Pawn structure - doubled, isolated, passed pawns
+                const whitePawnStructure = evaluatePawnStructure('w');
+                const blackPawnStructure = evaluatePawnStructure('b');
+                score += whitePawnStructure - blackPawnStructure;
+                
+                // Control of center
+                const whiteCenterControl = evaluateCenterControl('w');
+                const blackCenterControl = evaluateCenterControl('b');
+                score += whiteCenterControl - blackCenterControl;
+                
+                // Check status - being in check is bad
                 if (game.in_check()) {
-                    score += game.turn() === 'w' ? -30 : 30;
+                    score += (game.turn() === 'w' ? -20 : 20);
                 }
-                // Game over states
-                if (game.in_checkmate()) {
-                    return game.turn() === 'w' ? -Infinity : Infinity;
+                
+                // Convert to side-to-move perspective for negamax
+                const sideSign = (game.turn() === 'w') ? 1 : -1;
+                return sideSign * score;
+            }
+            
+            function evaluateKingSafety(kingSquare, color, isEndgame) {
+                if (!kingSquare) return 0;
+                
+                const file = kingSquare.charCodeAt(0) - 'a'.charCodeAt(0);
+                const rank = parseInt(kingSquare.charAt(1)) - 1;
+                
+                let safety = 0;
+                
+                // In the opening/middlegame, king should stay back
+                if (!isEndgame) {
+                    // Penalize king in the center
+                    if (file > 1 && file < 6) safety -= 30;
+                    
+                    // Reward king in the corner
+                    if ((file <= 1 || file >= 6) && (rank <= 1 || rank >= 6)) safety += 20;
+                    
+                    // Reward king behind pawn shield
+                    const pawnShield = countPawnShield(kingSquare, color);
+                    safety += pawnShield * 15;
+                } else {
+                    // In endgame, king should move to center
+                    if (file > 1 && file < 6 && rank > 1 && rank < 6) safety += 20;
                 }
-                return score;
+                
+                return color === 'w' ? safety : -safety;
+            }
+            
+            function countPawnShield(kingSquare, color) {
+                const file = kingSquare.charCodeAt(0) - 'a'.charCodeAt(0);
+                const rank = parseInt(kingSquare.charAt(1));
+                
+                let count = 0;
+                const rankOffset = color === 'w' ? 1 : -1;
+                const baseRank = color === 'w' ? rank + 1 : rank - 1;
+                
+                // Check pawns in front of king
+                for (let f = Math.max(0, file - 1); f <= Math.min(7, file + 1); f++) {
+                    const pawnSquare = 'abcdefgh'[f] + baseRank;
+                    const piece = game.get(pawnSquare);
+                    if (piece && piece.type === 'p' && piece.color === color) {
+                        count++;
+                    }
+                }
+                
+                return count;
+            }
+            
+            function evaluatePawnStructure(color) {
+                let score = 0;
+                const pawnPositions = [];
+                const files = [0, 0, 0, 0, 0, 0, 0, 0]; // Count of pawns on each file
+                
+                // Find all pawns
+                for (let rank = 1; rank <= 8; rank++) {
+                    for (let file = 0; file < 8; file++) {
+                        const square = 'abcdefgh'[file] + rank;
+                        const piece = game.get(square);
+                        if (piece && piece.type === 'p' && piece.color === color) {
+                            pawnPositions.push({ file, rank });
+                            files[file]++;
+                        }
+                    }
+                }
+                
+                // Doubled pawns (bad)
+                for (let i = 0; i < 8; i++) {
+                    if (files[i] > 1) {
+                        score -= 10 * (files[i] - 1);
+                    }
+                }
+                
+                // Isolated pawns (bad)
+                for (let i = 0; i < 8; i++) {
+                    if (files[i] > 0) {
+                        const leftSupport = i > 0 ? files[i - 1] > 0 : false;
+                        const rightSupport = i < 7 ? files[i + 1] > 0 : false;
+                        if (!leftSupport && !rightSupport) {
+                            score -= 15;
+                        }
+                    }
+                }
+                
+                // Passed pawns (good)
+                for (const pawn of pawnPositions) {
+                    if (isPassed(pawn.file, pawn.rank, color)) {
+                        const advancementBonus = color === 'w' ? pawn.rank : (9 - pawn.rank);
+                        score += 10 + 5 * advancementBonus;
+                    }
+                }
+                
+                return color === 'w' ? score : -score;
+            }
+            
+            function isPassed(file, rank, color) {
+                const enemyColor = color === 'w' ? 'b' : 'w';
+                const direction = color === 'w' ? 1 : -1;
+                const startRank = color === 'w' ? rank + 1 : rank - 1;
+                const endRank = color === 'w' ? 8 : 1;
+                
+                // Check if there are enemy pawns ahead or diagonally ahead
+                for (let r = startRank; color === 'w' ? r <= endRank : r >= endRank; r += direction) {
+                    // Check file and adjacent files
+                    for (let f = Math.max(0, file - 1); f <= Math.min(7, file + 1); f++) {
+                        const square = 'abcdefgh'[f] + r;
+                        const piece = game.get(square);
+                        if (piece && piece.type === 'p' && piece.color === enemyColor) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            }
+            
+            function evaluateCenterControl(color) {
+                const centerSquares = ['d4', 'e4', 'd5', 'e5'];
+                let score = 0;
+                
+                // Count attacks on center squares
+                for (const square of centerSquares) {
+                    if (isSquareAttackedBy(square, color)) {
+                        score += 5;
+                    }
+                }
+                
+                // Bonus for occupying center with pieces
+                for (const square of centerSquares) {
+                    const piece = game.get(square);
+                    if (piece && piece.color === color) {
+                        score += piece.type === 'p' ? 10 : 15;
+                    }
+                }
+                
+                return color === 'w' ? score : -score;
+            }
+            
+            function isSquareAttackedBy(square, color) {
+                // Use chess.js's built-in method if available
+                if (typeof game.isAttacked === 'function') {
+                    return game.isAttacked(square, color);
+                }
+                
+                // Fallback: manually check if any piece of given color can move to the square
+                const originalFen = game.fen();
+                const parts = originalFen.split(' ');
+                parts[1] = color;
+                const fenForColor = parts.join(' ');
+                const tempGame = new Chess(fenForColor);
+                
+                const moves = tempGame.moves({ verbose: true });
+                return moves.some(m => m.to === square);
             }
 
-            function scoreMoveHeuristic(move) {
-                let score = 0;
-                // Captures are good
-                if (move.captured) score += 1000;
-                // Checks are good
-                if (move.san.includes('+') || move.san.includes('#')) score += 800;
-                // Promote is great
-                if (move.promotion) score += 1200;
-                // Center moves
-                if (['d4','e4','d5','e5'].includes(move.to)) score += 50;
-                return score;
+            function countMovesFor(color) {
+                // Quick mobility estimate by switching turn via FEN hack
+                const originalFen = game.fen();
+                const parts = originalFen.split(' ');
+                parts[1] = color;
+                const fenForColor = parts.join(' ');
+                const tmp = new Chess(fenForColor);
+                return tmp.moves().length;
+            }
+
+            function orderMoves(moves, ply) {
+                // MVV-LVA + killer + history + checks ordering
+                const scored = moves.map((m) => {
+                    const isCapture = !!m.captured;
+                    let score = 0;
+                    if (isCapture) {
+                        score += 10000 + (PIECE_VALUES[m.captured] || 0) - (PIECE_VALUES[m.piece] || 0);
+                    }
+                    // Killer
+                    const killers = killerMoves[ply] || [];
+                    if (killers.some(k => k.from === m.from && k.to === m.to && (k.promotion || 'q') === (m.promotion || 'q'))) {
+                        score += 5000;
+                    }
+                    // History
+                    const key = m.from + '_' + m.to;
+                    score += (historyHeuristic[key] || 0);
+
+                    // Quick check bonus: make and unmake
+                    game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                    if (game.in_check()) score += 3000;
+                    game.undo();
+
+                    return { move: m, score };
+                });
+                scored.sort((a, b) => b.score - a.score);
+                return scored.map(s => s.move);
+            }
+
+            function estimateComplexity() {
+                const moves = game.moves({ verbose: true });
+                const hasTactical = moves.some(m => m.captured || m.promotion || (m.san && (m.san.includes('+') || m.san.includes('#'))));
+                return { movesCount: moves.length, hasTactical };
+            }
+
+            function computeAllocatedTimeMs() {
+                let t = ENGINE_CONFIG.maxThinkTimeMs;
+                const info = estimateComplexity();
+                if (game.in_check() || info.hasTactical || info.movesCount > 30) t += 400;
+                if (info.movesCount > 40) t += 200;
+                if (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+                    t = Math.min(t, 1000);
+                }
+                return t;
+            }
+
+            function qSearch(alpha, beta, qDepth) {
+                if (Date.now() > searchAbortTime) { searchAborted = true; return alpha; }
+                nodesVisited++;
+                const standPat = staticEvaluate();
+                if (standPat >= beta) return beta;
+                if (alpha < standPat) alpha = standPat;
+                if (!ENGINE_CONFIG.enableQuiescence || qDepth <= 0) return alpha;
+                const moves = game.moves({ verbose: true }).filter(m => m.captured || m.promotion);
+                if (moves.length === 0) return alpha;
+                for (const m of orderMoves(moves, 0)) {
+                    game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                    const score = -qSearch(-beta, -alpha, qDepth - 1);
+                    game.undo();
+                    if (score >= beta) return beta;
+                    if (score > alpha) alpha = score;
+                }
+                return alpha;
+            }
+
+            function negamax(depth, alpha, beta, ply) {
+                if (Date.now() > searchAbortTime) { searchAborted = true; return 0; }
+                nodesVisited++;
+
+                // Terminal states
+                if (game.in_checkmate()) return -(MATE_SCORE - ply);
+                if (game.in_stalemate() || game.in_draw() || game.insufficient_material()) return 0;
+
+                const ttKey = game.fen();
+                const ttEntry = tt.get(ttKey);
+                if (ttEntry && ttEntry.depth >= depth) {
+                    if (ttEntry.flag === 'EXACT') return ttEntry.score;
+                    if (ttEntry.flag === 'LOWER' && ttEntry.score > alpha) alpha = ttEntry.score;
+                    else if (ttEntry.flag === 'UPPER' && ttEntry.score < beta) beta = ttEntry.score;
+                    if (alpha >= beta) return ttEntry.score;
+                }
+
+                if (depth === 0) {
+                    return qSearch(alpha, beta, ENGINE_CONFIG.quiescenceMaxDepth);
+                }
+
+                let bestScore = -INF;
+                let bestLocalMove = null;
+                let flag = 'UPPER';
+
+                const moves = orderMoves(game.moves({ verbose: true }), ply);
+                if (moves.length === 0) {
+                    // No legal moves: already handled by checkmate/stalemate above
+                    return staticEvaluate();
+                }
+
+                for (const m of moves) {
+                    game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                    const score = -negamax(depth - 1, -beta, -alpha, ply + 1);
+                        game.undo();
+
+                    if (searchAborted) return 0;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestLocalMove = m;
+                    }
+                    if (score > alpha) {
+                        alpha = score;
+                        flag = 'EXACT';
+                        // History heuristic update
+                        const key = m.from + '_' + m.to;
+                        historyHeuristic[key] = (historyHeuristic[key] || 0) + depth * depth;
+                    }
+                    if (alpha >= beta) {
+                        // Beta cutoff: store killer move
+                        killerMoves[ply] = killerMoves[ply] || [];
+                        killerMoves[ply].unshift({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                        if (killerMoves[ply].length > 2) killerMoves[ply].length = 2;
+                        flag = 'LOWER';
+                        break;
+                    }
+                }
+
+                tt.set(ttKey, { depth, score: bestScore, flag });
+                return bestScore;
+            }
+
+            // Check opening book for the current position
+            function checkOpeningBook() {
+                if (!ENGINE_CONFIG.useOpeningBook) return null;
+                
+                // Get a simplified FEN (just the position and side to move)
+                const fen = game.fen();
+                const simpleFen = fen.split(' ').slice(0, 3).join(' ');
+                
+                // Check if we have this position in our opening book
+                for (const bookFen in openingBookMoves) {
+                    if (fen.startsWith(bookFen) || simpleFen.startsWith(bookFen)) {
+                        const bookMoves = openingBookMoves[bookFen];
+                        // Try each book move in order
+                        for (const moveStr of bookMoves) {
+                            try {
+                                // Validate move is legal in current position
+                                const moveObj = game.move(moveStr);
+                                game.undo(); // Don't actually make the move yet
+                                if (moveObj) {
+                                    console.log("Using opening book move:", moveStr);
+                                    return moveObj;
+                                }
+                            } catch (e) {
+                                // Move wasn't valid, try next one
+                                console.log("Book move not valid:", moveStr);
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            
+            // Check endgame tablebase
+            function checkEndgameTablebase() {
+                if (!ENGINE_CONFIG.useEndgameTablebase) return null;
+                
+                // Count pieces to see if we're in an endgame
+                const fen = game.fen();
+                const pieceCount = (fen.match(/[pnbrqkPNBRQK]/g) || []).length;
+                
+                if (pieceCount <= 5) {
+                    // We're in an endgame with 5 or fewer pieces
+                    // Check our tablebase
+                    for (const endgameType in endgameTablebase) {
+                        const tablebaseMove = endgameTablebase[endgameType](fen);
+                        if (tablebaseMove) return tablebaseMove;
+                    }
+                }
+                return null;
+            }
+
+            function findBestMoveIterative(thinkTimeMs) {
+                // First check cache
+                const fen = game.fen();
+                if (cachedBestMoves.has(fen)) {
+                    console.log("Using cached best move");
+                    return cachedBestMoves.get(fen);
+                }
+                
+                // Check opening book
+                const bookMove = checkOpeningBook();
+                if (bookMove) {
+                    cachedBestMoves.set(fen, bookMove);
+                    return bookMove;
+                }
+                
+                // Check endgame tablebase
+                const tablebaseMove = checkEndgameTablebase();
+                if (tablebaseMove) {
+                    cachedBestMoves.set(fen, tablebaseMove);
+                    return tablebaseMove;
+                }
+                
+                // Fall back to search
+                resetSearchState();
+                searchAbortTime = Date.now() + thinkTimeMs;
+                let bestMove = null;
+                let bestScore = -INF;
+                
+                // Get all legal moves
+                const rootMoves = orderMoves(game.moves({ verbose: true }), 0);
+                if (rootMoves.length === 0) return null;
+                
+                // If only one legal move, play it immediately
+                if (rootMoves.length === 1) {
+                    console.log("Only one legal move available");
+                    return rootMoves[0];
+                }
+                
+                // Iterative deepening search
+                for (let depth = 1; depth <= ENGINE_CONFIG.maxDepth; depth++) {
+                    let localBest = null;
+                    let localBestScore = -INF;
+
+                    for (const m of rootMoves) {
+                        game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                        const score = -negamax(depth - 1, -INF, INF, 1);
+                        game.undo();
+                        if (searchAborted) break;
+                        if (score > localBestScore) {
+                            localBestScore = score;
+                            localBest = m;
+                        }
+                    }
+
+                    if (!searchAborted && localBest) {
+                        bestMove = localBest;
+                        bestScore = localBestScore;
+                        console.log(`Completed depth ${depth}, best move: ${bestMove.san}, score: ${bestScore}`);
+                    } else {
+                        break; // time ran out during this depth
+                    }
+                }
+                
+                // Cache the result
+                if (bestMove) {
+                    cachedBestMoves.set(fen, bestMove);
+                }
+                
+                return bestMove;
+            }
+
+            function applyMoveSpec(m) {
+                return game.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+            }
+
+            // Advanced move selection with fallback strategies
+            function makeComputerMove() {
+                if (game.game_over()) { handleGameOver(); return; }
+                if (game.turn() === playerColor) { return; }
+                
+                updateStatus('Chess Master is thinking...');
+                
+                setTimeout(() => {
+                    // Get all legal moves
+                    const legalMoves = game.moves({ verbose: true });
+                    if (legalMoves.length === 0) {
+                        handleGameOver();
+                        return;
+                    }
+                    
+                    // Allocate thinking time based on position complexity
+                    const thinkMs = computeAllocatedTimeMs();
+                    
+                    // Find best move with our advanced engine
+                    let best = findBestMoveIterative(thinkMs);
+                    
+                    // Fallback strategy if no move was found
+                    if (!best) {
+                        console.log("Primary search failed, using fallback strategy");
+                        
+                        // First try: pick a move that gives check
+                        const checkingMoves = legalMoves.filter(m => {
+                            game.move(m);
+                            const givesCheck = game.in_check();
+                            game.undo();
+                            return givesCheck;
+                        });
+                        
+                        if (checkingMoves.length > 0) {
+                            best = checkingMoves[Math.floor(Math.random() * checkingMoves.length)];
+                        } else {
+                            // Second try: pick a capturing move
+                            const capturingMoves = legalMoves.filter(m => m.captured);
+                            if (capturingMoves.length > 0) {
+                                best = capturingMoves[Math.floor(Math.random() * capturingMoves.length)];
+                            } else {
+                                // Last resort: pick any legal move
+                                best = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+                            }
+                        }
+                    }
+                    
+                    // Apply the selected move
+                    const result = applyMoveSpec(best);
+                    
+                    // Update the board and status
+                    board.position(game.fen());
+                    updateHighlights();
+                    
+                    // Display appropriate message based on move type
+                    if (result.san.includes('#')) {
+                        updateStatus(`Chess Master plays: ${result.san} - Checkmate!`, true);
+                    } else if (result.san.includes('+')) {
+                        updateStatus(`Chess Master plays: ${result.san} - Check!`);
+                    } else if (result.captured) {
+                        updateStatus(`Chess Master plays: ${result.san} - Captures ${result.captured.toUpperCase()}`);
+                    } else {
+                        updateStatus(`Chess Master plays: ${result.san}`);
+                    }
+                    
+                    // Handle game continuation
+                    if (!game.game_over()) {
+                        if (game.turn() === playerColor) {
+                            updateStatus('Your turn.');
+                        } else {
+                            setTimeout(makeComputerMove, 400);
+                        }
+                    } else {
+                        handleGameOver();
+                    }
+                }, 10);
             }
 
             /**
