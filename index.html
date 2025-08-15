@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An elite chess opening trainer to help you master your openings and improve your game.">
+
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="Elite Chess Trainer">
+    <meta property="og:description" content="The definitive tool to master your chess openings.">
+    <meta property="og:type" content="website">
+
     <title>Elite Chess Trainer</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -157,65 +164,63 @@
         #myBoard {
             touch-action: none;
         }
-
-
-        /* Win Meter Bar - No AI, so this will mostly stay 50/50, but kept for visual structure */
-        .board-container {
-            position: relative;
-            display: flex; /* Use flex to align board and meter */
-            align-items: flex-start; /* Align to top */
-            gap: 16px; /* Space between board and meter */
-            width: 100%; /* Take full width of parent */
-            justify-content: center; /* Center board and meter */
-        }
-
-        #win-meter {
-            width: 20px; /* Width of the meter bar */
-            min-height: 200px; /* Minimum height for visibility */
-            background-color: #21262D; /* Default background */
-            border-radius: 5px;
-            overflow: hidden; /* Hide anything outside */
-            display: flex;
-            flex-direction: column; /* To make white/black parts stack */
-            justify-content: flex-end; /* White portion grows from bottom */
-            position: relative; /* For absolute positioning of text */
-            flex-shrink: 0; /* Prevent meter from shrinking */
-        }
-
-        /* Adjust meter height to match board */
-        #win-meter {
-            height: var(--board-size, 400px); /* Use a CSS variable for dynamic height */
-        }
-
-        .meter-fill-white {
-            background-color: #F8F8F8; /* White color for meter fill */
-            width: 100%;
-            transition: height 0.3s ease-in-out; /* Smooth transition */
-            position: absolute; /* Allows precise positioning */
-            bottom: 0;
-            left: 0;
-        }
-        .meter-fill-black {
-            background-color: #30363D; /* Darker color for black fill */
-            width: 100%;
-            transition: height 0.3s ease-in-out;
+        .arrow {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .meter-text {
-            position: absolute;
-            font-size: 0.8rem;
-            color: #c9d1d9;
-            font-weight: bold;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2; /* Above the fills */
-            text-shadow: 0 0 2px black; /* For readability */
+        .arrow line {
+            stroke: rgba(255, 0, 0, 0.7);
+            stroke-width: 14;
+            stroke-linecap: round;
         }
-        .meter-white-text { bottom: 5px; }
-        .meter-black-text { top: 5px; }
+
+        .arrow polygon {
+            fill: rgba(255, 0, 0, 0.7);
+        }
+
+        .highlight-check {
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.5) 80%, transparent 100%);
+        }
+        .highlight-checkmate-winner {
+            background: radial-gradient(circle, rgba(0, 255, 0, 0.5) 80%, transparent 100%);
+        }
+        .highlight-checkmate-loser {
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.5) 80%, transparent 100%);
+        }
+
+        @keyframes shake-and-fade {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            10% { transform: translate(-10px, -10px) rotate(-10deg); }
+            20% { transform: translate(10px, 10px) rotate(10deg); }
+            30% { transform: translate(-10px, 10px) rotate(0deg); }
+            40% { transform: translate(10px, -10px) rotate(10deg); }
+            50% { transform: translate(-10px, -10px) rotate(-10deg); }
+            60% { transform: translate(10px, 10px) rotate(0deg); }
+            70% { transform: translate(-10px, 10px) rotate(10deg); }
+            80% { transform: translate(10px, -10px) rotate(-10deg); }
+            90% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .king-capture-animation {
+            animation: shake-and-fade 1s ease-in-out forwards;
+        }
+
+
+        .board-container {
+            position: relative;
+            display: flex; 
+            align-items: flex-start; 
+            gap: 16px; 
+            width: 100%; 
+            justify-content: center; 
+        }
 
         /* Mobile specific adjustments */
         @media (max-width: 1023px) { /* Adjust for smaller screens like phones/tablets */
@@ -226,36 +231,23 @@
                 grid-template-columns: 1fr; /* Single column layout for mobile */
             }
             .command-center {
-                order: 2; /* Move controls below board/status */
+                order: 3; /* Move controls to the bottom */
                 margin-top: 1rem;
             }
             .lg\:col-span-1 { /* Override larger screen settings */
                 width: 100%;
             }
             .board-container {
-                flex-direction: column; /* Stack board and meter vertically */
-                align-items: center; /* Center them */
-                gap: 0.5rem; /* Reduce gap */
-            }
-            #win-meter {
-                width: 100%; /* Make meter horizontal */
-                height: 20px; /* Fixed height for horizontal bar */
-                flex-direction: row; /* For horizontal stack */
-                justify-content: flex-start; /* White portion grows from left */
-                order: 1; /* Place meter above board */
+                flex-direction: column; 
+                align-items: center; 
+                gap: 0.5rem; 
             }
             #myBoard {
-                order: 2; /* Place board below meter */
+                order: 2; 
             }
-            .meter-fill-white, .meter-fill-black {
-                height: 100%; /* Fill full height of horizontal bar */
-                width: 0; /* Will be set dynamically by JS */
+            #status {
+                order: 1;
             }
-            .meter-fill-white { right: 0; left: auto; } /* White grows from left (but applied to right side) */
-            .meter-fill-black { left: 0; }
-            .meter-text { top: 50%; transform: translate(-50%, -50%); } /* Center text vertically */
-            .meter-white-text { left: auto; right: 5px; } /* Adjust position for horizontal */
-            .meter-black-text { left: 5px; }
 
             /* Buttons layout for mobile */
             .command-center .grid {
@@ -286,64 +278,63 @@
 <body class="flex items-center justify-center min-h-screen p-4 md:p-6">
 
     <div class="aurora-background"></div>
-    <div class="main-container w-full max-w-7xl mx-auto">
+    <main class="main-container w-full max-w-7xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-white tracking-wide">Chess Opening Trainer</h1>
             <p class="text-lg text-slate-400 mt-2">The definitive tool to master your openings.</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="lg:col-span-1 w-full p-6 command-center shadow-2xl">
-                <h2 class="text-2xl font-bold mb-5 border-b border-slate-700 pb-3 text-white">Training Setup</h2>
+            <section class="lg:col-span-1 w-full p-6 command-center shadow-2xl" aria-labelledby="training-setup-heading">
+                <h2 id="training-setup-heading" class="text-2xl font-bold mb-5 border-b border-slate-700 pb-3 text-white">Training Setup</h2>
 
                 <div class="space-y-5">
                     <div>
                         <label for="player-color-select" class="block text-sm font-medium text-slate-300 mb-2">Your Color:</label>
-                        <select id="player-color-select" class="form-select w-full p-2.5 rounded-lg text-white">
+                        <select id="player-color-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select your color">
                             <option value="w">White</option>
                             <option value="b">Black</option>
                         </select>
                     </div>
                     <div>
                         <label for="category-select" class="block text-sm font-medium text-slate-300 mb-2">Opening Category:</label>
-                        <select id="category-select" class="form-select w-full p-2.5 rounded-lg text-white"></select>
+                        <select id="category-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select opening category"></select>
                     </div>
                      <div>
                         <label for="opening-select" class="block text-sm font-medium text-slate-300 mb-2">Specific Opening:</label>
-                        <select id="opening-select" class="form-select w-full p-2.5 rounded-lg text-white"></select>
+                        <select id="opening-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select specific opening"></select>
                     </div>
                      <div>
                         <label for="variation-select" class="block text-sm font-medium text-slate-300 mb-2">Variation:</label>
-                        <select id="variation-select" class="form-select w-full p-2.5 rounded-lg text-white"></select>
+                        <select id="variation-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select opening variation"></select>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-6">
-                    <button id="start-btn" class="btn start-btn w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg">Start Practice</button>
-                    <button id="undo-btn" class="btn undo-btn w-full py-3 px-4 rounded-lg font-semibold text-white">Undo Last Move</button>
-                    <button id="reset-btn" class="btn w-full py-3 px-4 rounded-lg font-semibold text-white">Reset Board</button>
-                    <button id="start-bot-btn" class="btn start-bot-btn w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg col-span-2" style="display: none;">Start Two-Player Mode</button>
+                    <button id="start-btn" class="btn start-btn w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg" role="button">Start Practice</button>
+                    <button id="undo-btn" class="btn undo-btn w-full py-3 px-4 rounded-lg font-semibold text-white" role="button">Undo Last Move</button>
+                    <button id="reset-btn" class="btn w-full py-3 px-4 rounded-lg font-semibold text-white" role="button">Reset Board</button>
+                    <button id="start-bot-btn" class="btn start-bot-btn w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg col-span-2" style="display: none;" role="button">Start Two-Player Mode</button>
                 </div>
-            </div>
+            </section>
 
-            <div class="lg:col-span-1">
+            <section class="lg:col-span-1" aria-labelledby="game-status-heading">
                 <div id="status" class="w-full p-4 mb-4 bg-slate-800 rounded-lg text-center shadow-md">
+                    <h2 id="game-status-heading" class="sr-only">Game Status</h2>
                     <p class="font-semibold text-xl" id="status-opening">Welcome!</p>
                     <p class="text-md text-slate-400" id="status-move">Select an opening and start your practice.</p>
                     <div id="evaluation-display" class="mt-2 text-sm"></div>
                 </div>
                 <div class="board-container">
                     <div id="myBoard" class="w-full rounded-lg shadow-2xl"></div>
-                    <div id="win-meter">
-                        <div class="meter-fill-white"></div>
-                        <div class="meter-fill-black"></div>
-                        <span class="meter-text meter-white-text"></span>
-                        <span class="meter-text meter-black-text"></span>
-                    </div>
                 </div>
-            </div>
+            </section>
         </div>
-    </div>
+    </main>
+
+    <footer class="text-center mt-8 p-4 text-slate-500 text-sm">
+        <p>&copy; 2024 Elite Chess Trainer. All Rights Reserved.</p>
+    </footer>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
@@ -371,42 +362,30 @@
 
             const $ = window.jQuery;
 
+            // Game state variables
             let board = null;
             let game = new Chess();
             let currentOpeningMoves = [];
             let currentMoveIndex = 0;
-            let playerColor = 'w'; // Default player is White (as computer color selection removed)
-            let twoPlayerModeActive = false; // Flag for 2-player mode
-            let thinkingProcess = null; // To store timeout for computer thinking or move processing (kept for general timeouts)
-
-            // --- AI/API related variables removed ---
-            // prevEvalCp, prevBestMoveSAN, currentApiTaskId, chessApiWs, CHESS_API_URL, apiCallbacks are removed.
-            // Evaluation and feedback will be purely visual (0.00) or based on predefined text.
+            let playerColor = 'w'; 
+            let twoPlayerModeActive = false;
+            let thinkingProcess = null;
 
             // DOM Elements
             const $statusOpening = $('#status-opening');
             const $statusMove = $('#status-move');
             const $boardElement = $('#myBoard');
             const $playerColorSelect = $('#player-color-select');
-            // $computerColorSelect removed
             const $categorySelect = $('#category-select');
             const $openingSelect = $('#opening-select');
             const $variationSelect = $('#variation-select');
             const $startBtn = $('#start-btn');
             const $resetBtn = $('#reset-btn');
             const $undoBtn = $('#undo-btn'); 
-            const $startTwoPlayerBtn = $('#start-bot-btn'); // Renamed to reflect 2-player purpose
-            const $evaluationDisplay = $('#evaluation-display'); // Will mostly show 0.00
-            const $winMeter = $('#win-meter'); // Will mostly show 50/50
-            const $winMeterWhiteFill = $winMeter.find('.meter-fill-white');
-            const $winMeterBlackFill = $winMeter.find('.meter-fill-black');
-            const $winMeterWhiteText = $winMeter.find('.meter-white-text');
-            const $winMeterBlackText = $winMeter.find('.meter-black-text');
+            const $startTwoPlayerBtn = $('#start-bot-btn');
+            const $evaluationDisplay = $('#evaluation-display');
 
-            // --- API Connection Function (REMOVED) ---
-            // connectChessApiWs, sendEngineRequest are removed
-
-            // --- Opening Book Data (RIGOROUSLY VERIFIED & CORRECTED) ---
+            // --- Opening Book Data ---
             const openingBook = {
                 "King's Pawn (e4)": {
                     "Italian Game": {
@@ -508,12 +487,18 @@
                 }
             };
 
+            /**
+             * Populates the category dropdown with the main opening categories.
+             */
             function populateCategories() {
                 $categorySelect.empty();
                 for (const category in openingBook) { $categorySelect.append($('<option>', { value: category, text: category })); }
                 $categorySelect.trigger('change');
             }
 
+            /**
+             * Populates the opening dropdown based on the selected category.
+             */
             function populateOpenings() {
                 const selectedCategory = $categorySelect.val();
                 $openingSelect.empty();
@@ -523,6 +508,9 @@
                 $openingSelect.trigger('change');
             }
 
+            /**
+             * Populates the variation dropdown based on the selected opening.
+             */
             function populateVariations() {
                 const selectedCategory = $categorySelect.val();
                 const selectedOpening = $openingSelect.val();
@@ -535,13 +523,12 @@
             $categorySelect.on('change', populateOpenings);
             $openingSelect.on('change', populateVariations);
 
-            // Function to display evaluation feedback (will mostly be "Even" now)
-            function displayEvaluation(evalCp, winChance, mate, statusMessage = null) {
-                // In pure 2-player mode, we don't display AI eval, just "Game"
+            /**
+             * Displays a status message in the evaluation display area.
+             * @param {string} [statusMessage=null] - The message to display.
+             */
+            function displayEvaluation(statusMessage = null) {
                 $evaluationDisplay.empty().removeClass('eval-white eval-black eval-even');
-                $winMeterWhiteText.text('');
-                $winMeterBlackText.text('');
-                updateWinMeter(50); // Keep meter centered for 2-player mode
 
                 if (statusMessage) { 
                     $evaluationDisplay.text(statusMessage);
@@ -550,68 +537,117 @@
                 }
             }
 
-            // Function to update the graphical win meter (will mostly stay 50/50 now)
-            function updateWinMeter(winChance) {
-                const whiteWinPercentage = winChance;
-                const blackWinPercentage = 100 - winChance;
-
-                // Adjust meter height to chessboard size
-                const boardHeight = $('#myBoard').height();
-                if (boardHeight > 0) {
-                    $winMeter.css('--board-size', `${boardHeight}px`);
-                }
-
-                // Check if it's a mobile layout (horizontal meter) based on actual CSS media query match
-                if (window.matchMedia("(max-width: 1023px)").matches) {
-                    $winMeterWhiteFill.css('width', `${whiteWinPercentage}%`);
-                    $winMeterBlackFill.css('width', `${blackWinPercentage}%`);
-                    $winMeterWhiteFill.css('height', '100%'); 
-                    $winMeterBlackFill.css('height', '100%'); 
-                    $winMeterWhiteText.text(whiteWinPercentage.toFixed(0) + '%');
-                    $winMeterBlackText.text(blackWinPercentage.toFixed(0) + '%');
-                } else { // Desktop layout (vertical meter)
-                    $winMeterWhiteFill.css('height', `${whiteWinPercentage}%`);
-                    $winMeterBlackFill.css('height', `${blackWinPercentage}%`);
-                    $winMeterWhiteFill.css('width', '100%'); 
-                    $winMeterBlackFill.css('width', '100%'); 
-                    $winMeterWhiteText.text(whiteWinPercentage.toFixed(0) + '%');
-                    $winMeterBlackText.text(blackWinPercentage.toFixed(0) + '%');
-                }
-                 // Adjust text color based on background for readability
-                 if (whiteWinPercentage > 70) {
-                    $winMeterWhiteText.css('color', 'black');
-                 } else {
-                    $winMeterWhiteText.css('color', '#c9d1d9');
-                 }
-                 if (blackWinPercentage > 70) {
-                    $winMeterBlackText.css('color', 'black');
-                 } else {
-                    $winMeterBlackText.css('color', '#c9d1d9');
-                 }
-
-                 // Hide percentage text if bar is too small
-                 $winMeterWhiteText.toggle(whiteWinPercentage > 15);
-                 $winMeterBlackText.toggle(blackWinPercentage > 15);
-            }
-
-
-            // Function to determine move quality feedback (Removed AI aspects)
-            function getMoveQualityFeedback(prevEval, currentEval, turn, playerMoveSAN, bestMoveSAN) {
-                return ''; // No AI, so no move quality feedback
-            }
-
-            // --- Click-to-Move Variables ---
-            let squareSelected = null; // Stores the square of the piece clicked first
+            // --- Click-to-Move and Highlighting Variables ---
+            let squareSelected = null; 
             let legalMovesForSelectedPiece = [];
 
+            /**
+             * Clears all visual highlights from the board (selection, legal moves, check, etc.).
+             */
             function clearHighlights() {
-                $('#myBoard .square-55d63').removeClass('highlight-selected');
+                $('#myBoard .square-55d63').removeClass('highlight-selected highlight-check highlight-checkmate-winner highlight-checkmate-loser');
                 legalMovesForSelectedPiece.forEach(move => {
                     $('#myBoard .square-' + move.to).removeClass('highlight-legal-move');
                 });
             }
 
+            /**
+             * Clears any arrows from the board.
+             */
+            function clearArrow() {
+                $('.arrow').remove();
+            }
+
+            /**
+             * Draws an arrow on the board from a starting square to an ending square.
+             * @param {string} from - The starting square in algebraic notation (e.g., 'e2').
+             * @param {string} to - The ending square in algebraic notation (e.g., 'e4').
+             */
+            function drawArrow(from, to) {
+                clearArrow();
+                const boardElement = $('#myBoard');
+                const fromSquare = boardElement.find('.square-' + from);
+                const toSquare = boardElement.find('.square-' + to);
+
+                if (!fromSquare.length || !toSquare.length) {
+                    console.error('Could not find squares for arrow', from, to);
+                    return;
+                }
+
+                const fromOffset = fromSquare.offset();
+                const toOffset = toSquare.offset();
+                const boardOffset = boardElement.offset();
+
+                const fromX = fromOffset.left + fromSquare.width() / 2 - boardOffset.left;
+                const fromY = fromOffset.top + fromSquare.height() / 2 - boardOffset.top;
+                const toX = toOffset.left + toSquare.width() / 2 - boardOffset.left;
+                const toY = toOffset.top + toSquare.height() / 2 - boardOffset.top;
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'arrow');
+                svg.setAttribute('width', boardElement.width());
+                svg.setAttribute('height', boardElement.height());
+
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                marker.setAttribute('id', 'arrowhead');
+                marker.setAttribute('markerWidth', '5');
+                marker.setAttribute('markerHeight', '3.5');
+                marker.setAttribute('refX', '5');
+                marker.setAttribute('refY', '1.75');
+                marker.setAttribute('orient', 'auto');
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', '0 0, 5 1.75, 0 3.5');
+                marker.appendChild(polygon);
+                defs.appendChild(marker);
+                svg.appendChild(defs);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromX);
+                line.setAttribute('y1', fromY);
+                line.setAttribute('x2', toX);
+                line.setAttribute('y2', toY);
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                svg.appendChild(line);
+
+                boardElement.append(svg);
+            }
+
+            /**
+             * Updates the board to highlight the king if it is in check.
+             */
+            function updateHighlights() {
+                clearHighlights();
+                if (game.in_check()) {
+                    const kingSquare = findKing(game.turn());
+                    $('#myBoard .square-' + kingSquare).addClass('highlight-check');
+                }
+            }
+
+            /**
+             * Finds the square of the king for a given color.
+             * @param {string} color - The color of the king to find ('w' or 'b').
+             * @returns {string|null} The square of the king or null if not found.
+             */
+            function findKing(color) {
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        const square = 'abcdefgh'[j] + (i + 1);
+                        const piece = game.get(square);
+                        if (piece && piece.type === 'k' && piece.color === color) {
+                            return square;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            /**
+             * Handles the logic for when a square is clicked on the board.
+             * @param {string} square - The square that was clicked.
+             */
             function onSquareClick(square) {
+                clearArrow();
                 if (game.game_over()) {
                     updateStatus("Game is over!", false);
                     return;
@@ -656,6 +692,7 @@
                         legalMovesForSelectedPiece = [];
                         board.position(game.fen());
                         updateStatus(`Move: ${move.san}`);
+                        updateHighlights();
                         if (!game.game_over()) {
                             $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
                         } else {
@@ -665,8 +702,13 @@
                 }
             }
 
-            // Centralized function for handling player moves in Opening Trainer book mode (both drag and click)
+            /**
+             * Handles player moves during the opening practice phase.
+             * @param {string} source - The source square of the move.
+             * @param {string} [target=null] - The target square of the move (for drag-and-drop).
+             */
             function handlePlayerMoveInBookMode(source, target = null) {
+                clearArrow();
                 let moveResult;
                 const currentFenBeforeMove = game.fen();
 
@@ -699,6 +741,7 @@
                 }
                 
                 board.position(game.fen());
+                updateHighlights();
 
                 const correctMoveSAN = currentOpeningMoves[currentMoveIndex];
                 
@@ -718,37 +761,40 @@
                     return true;
                 } else {
                     updateStatus(`Incorrect. The book move is ${correctMoveSAN}. Try again.`, false);
+                    const tempGame = new Chess(currentFenBeforeMove);
+                    const correctMove = tempGame.move(correctMoveSAN);
+                    drawArrow(correctMove.from, correctMove.to);
                     game.undo();
                     board.position(game.fen());
                     return 'snapback';
                 }
             }
 
-            // onDrop is for drag-and-drop actions only
+            /**
+             * Handles the drop event for drag-and-drop moves.
+             * @param {string} source - The source square.
+             * @param {string} target - The target square.
+             */
             function onDrop(source, target) {
-                // If game is over, no moves allowed
+                clearArrow();
                 if (game.game_over()) {
                     updateStatus("Game is over!", false);
                     return 'snapback';
                 }
                 
-                // If book moves are active, only playerColor can move (White)
                 if (currentMoveIndex < currentOpeningMoves.length) {
                     if (game.turn() !== playerColor) {
                         updateStatus("It's not your turn to play book moves! You are White.", false);
                         return 'snapback';
                     }
-                    return handlePlayerMoveInBookMode(source, target); // Pass to book mode handler
+                    return handlePlayerMoveInBookMode(source, target);
                 } 
                 
-                // If book moves are complete (Two-Player Mode)
-                // In two-player free play, current game.turn() decides who can move
                 if (game.get(source) && game.get(source).color !== game.turn()) {
                     updateStatus(`It's not ${game.turn() === 'w' ? 'White' : 'Black'}'s turn!`, false);
                     return 'snapback';
                 }
 
-                // Proceed with normal two-player drag-and-drop
                 let move = game.move({ from: source, to: target, promotion: 'q' });
 
                 if (move === null) {
@@ -756,10 +802,10 @@
                     return 'snapback';
                 }
                 
-                board.position(game.fen()); // Update visual board
+                board.position(game.fen());
                 updateStatus(`Move: ${move.san}`);
+                updateHighlights();
                 if (!game.game_over()) {
-                    // In 2-player mode, just switch turns and update status
                     $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
                 } else {
                     handleGameOver();
@@ -767,16 +813,16 @@
                 return true; 
             }
 
-            // This function handles Computer's turn ONLY in Book Mode
+            /**
+             * Makes the next move for the computer during the opening practice.
+             */
             function makeComputerMoveInBookMode() {
                 if (game.game_over()) {
                     handleGameOver();
                     return;
                 }
-                // Check if it's Black's turn (Computer in book mode is always Black if player is White)
-                if (game.turn() === 'b' && currentMoveIndex < currentOpeningMoves.length) {
+                if (game.turn() !== playerColor && currentMoveIndex < currentOpeningMoves.length) {
                     const moveSAN = currentOpeningMoves[currentMoveIndex];
-                    console.log('Computer (Black) making book move:', moveSAN);
                     const moveResult = game.move(moveSAN, { sloppy: true });
                     if (moveResult === null) {
                         console.error("Computer tried to make an illegal move (from book):", moveSAN, "from FEN:", game.fen());
@@ -784,31 +830,44 @@
                         return;
                     }
                     board.position(game.fen());
+                    updateHighlights();
                     currentMoveIndex++;
                     updateStatus(`Computer plays: ${moveSAN} <span class="feedback-book">(Book Move)</span>`);
                     
                     if (currentMoveIndex >= currentOpeningMoves.length) {
-                        // Opening complete, transition to 2-Player mode
                         updateStatus("Opening complete! Well done! Switching to Two-Player Mode!", true);
                         twoPlayerModeActive = true; 
-                        $startTwoPlayerBtn.hide(); // Hide the start 2-player button as it's auto-activated
+                        $startTwoPlayerBtn.hide();
                         $statusMove.append(`<br>Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
-                        displayEvaluation(null, null, null); // Clear eval and show "Game In Progress"
-                    } else if (game.turn() === playerColor) { // It's player's turn (White) for next book move
+                        displayEvaluation(null, null, null);
+                    } else if (game.turn() === playerColor) {
                         updateStatus('Your turn.');
-                    } else { // It's still Black's turn for another book move (unlikely in standard openings)
+                    } else {
                         setTimeout(makeComputerMoveInBookMode, 500);
                     }
                 } else {
-                    // This case should ideally not be hit if makeComputerMoveInBookMode is only called for Black's turn in book.
                     console.log("Not computer's book move turn. Skipping makeComputerMoveInBookMode.");
                 }
             }
 
-
+            /**
+             * Handles the end of the game, displaying the result and animations.
+             */
             function handleGameOver() {
                 if (game.in_checkmate()) {
-                    updateStatus(`Game Over! Checkmate. ${game.turn() === 'w' ? 'Black' : 'White'} wins!`, true);
+                    const loserColor = game.turn();
+                    const winnerColor = loserColor === 'w' ? 'b' : 'w';
+                    const loserKingSquare = findKing(loserColor);
+                    const winnerKingSquare = findKing(winnerColor);
+
+                    $('#myBoard .square-' + loserKingSquare).addClass('highlight-checkmate-loser');
+                    $('#myBoard .square-' + winnerKingSquare).addClass('highlight-checkmate-winner');
+                    
+                    const loserKingPiece = $('#myBoard .square-' + loserKingSquare).find('img');
+                    loserKingPiece.addClass('king-capture-animation');
+
+                    updateStatus(`Game Over! Checkmate. ${winnerColor === 'w' ? 'White' : 'Black'} wins!`, true);
+
                 } else if (game.in_stalemate()) {
                     updateStatus("Game Over! Stalemate. It's a draw.", false);
                 } else if (game.in_draw()) {
@@ -818,37 +877,44 @@
                 } else if (game.insufficient_material()) {
                     updateStatus("Game Over! Draw by insufficient material.", false);
                 }
-                twoPlayerModeActive = false; // Ensure 2-player mode is off
-                $startTwoPlayerBtn.hide(); // Hide the button on game over
+                twoPlayerModeActive = false;
+                $startTwoPlayerBtn.hide();
                 $evaluationDisplay.empty(); 
-                updateWinMeter(50); // Reset meter to even
                 console.log('Game Over. All states cleared.');
             }
 
+            /**
+             * Updates the status message and board highlight.
+             * @param {string} text - The message to display.
+             * @param {boolean} isCorrect - Whether the move was correct or not.
+             */
             function updateStatus(text, isCorrect) {
-                $statusMove.html(text); // Use .html() to allow span tags
+                $statusMove.html(text);
                 $boardElement.removeClass('highlight-correct highlight-incorrect');
                 if (isCorrect === true) { $boardElement.addClass('highlight-correct'); }
                 else if (isCorrect === false) { $boardElement.addClass('highlight-incorrect'); }
                 
-                // Keep the highlight for these specific messages, otherwise fade it
                 if (text.includes("Opening complete") || text.includes("Game Over") || text.includes("Computer is thinking") || text.includes("Analyzing...")) {
                     // Do not remove highlight
                 } else {
-                    if (thinkingProcess) clearTimeout(thinkingProcess); // Clear any pending status update clears
+                    if (thinkingProcess) clearTimeout(thinkingProcess);
                     thinkingProcess = setTimeout(() => $boardElement.removeClass('highlight-correct highlight-incorrect'), 1200);
                 }
             }
 
+            /**
+             * Starts the opening practice.
+             */
             function startPractice() {
+                clearArrow();
+                clearHighlights();
                 console.log('Starting new practice...');
                 game = new Chess();
                 currentMoveIndex = 0;
-                playerColor = $playerColorSelect.val(); // User selected color for book moves
-                twoPlayerModeActive = false; // Start in book mode, not 2-player mode
-                $startTwoPlayerBtn.hide(); // Hide button initially
+                playerColor = $playerColorSelect.val();
+                twoPlayerModeActive = false;
+                $startTwoPlayerBtn.hide();
                 $evaluationDisplay.empty(); 
-                updateWinMeter(50); // Reset meter to even
                 
                 const selectedCategory = $categorySelect.val();
                 const selectedOpening = $openingSelect.val();
@@ -860,75 +926,72 @@
                     draggable: true, 
                     position: 'start', 
                     onDrop: onDrop,
-                    onSquareClick: onSquareClick, // Enable click-to-move
-                    orientation: playerColor === 'w' ? 'white' : 'black', // Orient board as selected player
+                    onSquareClick: onSquareClick,
+                    orientation: playerColor === 'w' ? 'white' : 'black',
                     pieceTheme: 'chesspieces/wikipedia/{piece}.png'
                 };
                 $('#myBoard').empty();
-                board = Chessboard('myBoard', boardConfig); 
+                board = Chessboard('myBoard', boardConfig);
                 $(window).off('resize').on('resize', board.resize);
                 $statusOpening.text(`${selectedOpening}: ${selectedVariation}`);
 
-                displayEvaluation(null, null, null); // Clear eval display and show game in progress
+                displayEvaluation(null, null, null);
 
-                // Determine who makes the first move (based on book and playerColor)
-                if (playerColor === 'w' && game.turn() === 'w') { // Player is White, it's White's turn
+                if (playerColor === 'w' && game.turn() === 'w') {
                     updateStatus('Practice started. Your turn (White).');
-                } else if (playerColor === 'b' && game.turn() === 'w') { // Player is Black, White (opponent) moves first
+                } else if (playerColor === 'b' && game.turn() === 'w') {
                     updateStatus('Practice started. Opponent (White) to move first (Book move).');
-                    setTimeout(makeComputerMoveInBookMode, 500); // Opponent (White) makes book move
-                } else { // Should default to player's turn if no book move to make for opponent
-                    updateStatus('Practice started. Your turn (White).', true); // Default to player's turn (White)
+                    setTimeout(makeComputerMoveInBookMode, 500);
+                } else {
+                    updateStatus('Practice started. Your turn (White).', true);
                 }
             }
 
-            // --- Undo Functionality ---
+            /**
+             * Undoes the last move.
+             */
             function undoLastMove() {
+                clearArrow();
                 if (game.history().length === 0) {
                     updateStatus("No moves to undo!", false);
                     return;
                 }
 
-                // If currently in book mode, undo 1 move at a time
                 if (currentMoveIndex < currentOpeningMoves.length) {
                     game.undo();
-                    if (currentMoveIndex > 0) currentMoveIndex--; // Decrement if not first move
+                    if (currentMoveIndex > 0) currentMoveIndex--;
                     updateStatus(`1 move undone.`, true);
-                } else { // After book moves (2-player mode)
+                } else {
                     let lastMove = game.history()[game.history().length - 1];
-                    game.undo(); // Undo current player's move
+                    game.undo();
                     updateStatus(`1 move undone.`, true);
-                    // If it was black's turn to move, it means white just moved.
-                    // If it was white's turn to move, it means black just moved.
-                    // So, simply state whose turn it is now.
                 }
                 
                 board.position(game.fen());
-                // Update status for 2-player mode after undo
+                updateHighlights();
                 if (currentMoveIndex >= currentOpeningMoves.length) {
                     $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
                 }
-                displayEvaluation(null, null, null); // Clear eval and show "Game In Progress"
-                updateWinMeter(50); // Reset meter for 2-player
+                displayEvaluation(null, null, null);
             }
 
-            $undoBtn.on('click', undoLastMove); // Assign click handler
+            $undoBtn.on('click', undoLastMove);
 
             $startBtn.on('click', startPractice);
             $resetBtn.on('click', () => {
+                clearArrow();
+                clearHighlights();
                 board.start();
                 game.reset();
                 currentMoveIndex = 0; 
                 twoPlayerModeActive = false;
-                $startTwoPlayerBtn.hide(); // Hide the 2-player button
+                $startTwoPlayerBtn.hide();
                 $statusOpening.text("Board Reset");
                 $statusMove.text("Select an opening and start.");
                 $evaluationDisplay.empty();
-                updateWinMeter(50); // Reset meter
                 console.log('Board reset. All states cleared.');
             });
 
-            // This button now transitions to 2-Player mode AFTER book moves
             $startTwoPlayerBtn.on('click', () => {
                 if (currentMoveIndex < currentOpeningMoves.length) {
                     updateStatus("Two-Player Mode can only be started after book moves are complete!", false);
@@ -938,27 +1001,25 @@
                 $startTwoPlayerBtn.hide(); 
                 console.log('Transitioned to Two-Player Mode.');
                 updateStatus(`Two-Player Mode Activated! Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`, true);
-                displayEvaluation(null, null, null); // Clear eval for 2-player
-                updateWinMeter(50); // Center meter for 2-player
+                displayEvaluation(null, null, null);
             });
 
-            // Handle window resize to adjust win meter orientation
             $(window).resize(() => {
-                updateWinMeter(50); // Keep meter centered for 2-player/no-AI mode
+                // No-op
             });
 
+            // Initial setup
             populateCategories();
             const initialConfig = { 
                 draggable: true, 
                 position: 'start', 
                 onDrop: onDrop,
-                onSquareClick: onSquareClick, // Enable click-to-move
-                orientation: playerColor === 'w' ? 'white' : 'black', // Initial orientation
+                onSquareClick: onSquareClick,
+                orientation: playerColor === 'w' ? 'white' : 'black',
                 pieceTheme: 'chesspieces/wikipedia/{piece}.png'
             };
             board = Chessboard('myBoard', initialConfig); 
             $(window).resize(board.resize);
-            updateWinMeter(50); // Initial meter state on first load
         });
     </script>
 
