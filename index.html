@@ -694,7 +694,14 @@
                         updateStatus(`Move: ${move.san}`);
                         updateHighlights();
                         if (!game.game_over()) {
-                            $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
+                            if (game.turn() === playerColor) {
+                                $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
+                            } else if (twoPlayerModeActive) {
+                                // Computer's turn after opening
+                                setTimeout(makeComputerMove, 500);
+                            } else {
+                                $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
+                            }
                         } else {
                             handleGameOver();
                         }
@@ -752,11 +759,15 @@
                     if (currentMoveIndex < currentOpeningMoves.length) {
                         setTimeout(makeComputerMoveInBookMode, 500);
                     } else {
-                        updateStatus("Opening complete! Well done! Switching to Two-Player Mode!", true);
+                        updateStatus("Opening complete! Now playing against computer...", true);
                         twoPlayerModeActive = true;
                         $startTwoPlayerBtn.hide();
-                        $statusMove.append(`<br>Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
-                        displayEvaluation(null, null, null);
+                        // Continue with computer moves after opening
+                        if (game.turn() !== playerColor) {
+                            setTimeout(makeComputerMove, 500);
+                        } else {
+                            updateStatus('Your turn.');
+                        }
                     }
                     return true;
                 } else {
@@ -806,7 +817,14 @@
                 updateStatus(`Move: ${move.san}`);
                 updateHighlights();
                 if (!game.game_over()) {
-                    $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
+                    if (game.turn() === playerColor) {
+                        $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
+                    } else if (twoPlayerModeActive) {
+                        // Computer's turn after opening
+                        setTimeout(makeComputerMove, 500);
+                    } else {
+                        $statusMove.text(`Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
+                    }
                 } else {
                     handleGameOver();
                 }
@@ -835,11 +853,15 @@
                     updateStatus(`Computer plays: ${moveSAN} <span class="feedback-book">(Book Move)</span>`);
                     
                     if (currentMoveIndex >= currentOpeningMoves.length) {
-                        updateStatus("Opening complete! Well done! Switching to Two-Player Mode!", true);
+                        updateStatus("Opening complete! Now playing against computer...", true);
                         twoPlayerModeActive = true; 
                         $startTwoPlayerBtn.hide();
-                        $statusMove.append(`<br>Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`);
-                        displayEvaluation(null, null, null);
+                        // Continue with computer moves after opening
+                        if (game.turn() !== playerColor) {
+                            setTimeout(makeComputerMove, 500);
+                        } else {
+                            updateStatus('Your turn.');
+                        }
                     } else if (game.turn() === playerColor) {
                         updateStatus('Your turn.');
                     } else {
@@ -848,6 +870,138 @@
                 } else {
                     console.log("Not computer's book move turn. Skipping makeComputerMoveInBookMode.");
                 }
+            }
+
+            /**
+             * Makes a computer move after the opening book is complete.
+             * Uses simple move selection based on available legal moves.
+             */
+            function makeComputerMove() {
+                if (game.game_over()) {
+                    handleGameOver();
+                    return;
+                }
+                if (game.turn() === playerColor) {
+                    return; // Not computer's turn
+                }
+
+                const moveResult = findAndPlayBestMove(2);
+                if (moveResult) {
+                    board.position(game.fen());
+                    updateHighlights();
+                    updateStatus(`Computer plays: ${moveResult.san}`);
+                    if (!game.game_over()) {
+                        if (game.turn() === playerColor) {
+                            updateStatus('Your turn.');
+                        } else {
+                            setTimeout(makeComputerMove, 500);
+                        }
+                    } else {
+                        handleGameOver();
+                    }
+                }
+            }
+
+            // Advanced move search with minimax + alpha-beta and a lightweight eval
+            function findAndPlayBestMove(searchDepth) {
+                const bestMove = searchBestMove(searchDepth);
+                if (!bestMove) return null;
+                return game.move(bestMove);
+            }
+
+            function searchBestMove(depth) {
+                const isMaximizing = game.turn() === 'w';
+                let bestEval = isMaximizing ? -Infinity : Infinity;
+                let bestMove = null;
+                const moves = game.moves({ verbose: true });
+
+                // Move ordering: prefer captures and checks
+                moves.sort((a, b) => scoreMoveHeuristic(b) - scoreMoveHeuristic(a));
+
+                for (const move of moves) {
+                    game.move(move);
+                    const evalScore = minimax(depth - 1, -Infinity, Infinity, !isMaximizing);
+                    game.undo();
+                    if (isMaximizing) {
+                        if (evalScore > bestEval) { bestEval = evalScore; bestMove = move; }
+                    } else {
+                        if (evalScore < bestEval) { bestEval = evalScore; bestMove = move; }
+                    }
+                }
+                return bestMove;
+            }
+
+            function minimax(depth, alpha, beta, isMaximizing) {
+                if (depth === 0 || game.game_over()) {
+                    return evaluateBoard();
+                }
+
+                const moves = game.moves({ verbose: true });
+                // Move ordering: prefer captures and checks
+                moves.sort((a, b) => scoreMoveHeuristic(b) - scoreMoveHeuristic(a));
+
+                if (isMaximizing) {
+                    let maxEval = -Infinity;
+                    for (const move of moves) {
+                        game.move(move);
+                        const evalChild = minimax(depth - 1, alpha, beta, false);
+                        game.undo();
+                        if (evalChild > maxEval) maxEval = evalChild;
+                        if (evalChild > alpha) alpha = evalChild;
+                        if (beta <= alpha) break;
+                    }
+                    return maxEval;
+                } else {
+                    let minEval = Infinity;
+                    for (const move of moves) {
+                        game.move(move);
+                        const evalChild = minimax(depth - 1, alpha, beta, true);
+                        game.undo();
+                        if (evalChild < minEval) minEval = evalChild;
+                        if (evalChild < beta) beta = evalChild;
+                        if (beta <= alpha) break;
+                    }
+                    return minEval;
+                }
+            }
+
+            function evaluateBoard() {
+                // Material + simple positional bonuses
+                const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+                let score = 0;
+                for (let rank = 1; rank <= 8; rank++) {
+                    for (let file = 0; file < 8; file++) {
+                        const square = 'abcdefgh'[file] + rank;
+                        const piece = game.get(square);
+                        if (!piece) continue;
+                        const sign = piece.color === 'w' ? 1 : -1;
+                        score += sign * (pieceValues[piece.type] || 0);
+                        // Center control bonus
+                        if (['d4','e4','d5','e5'].includes(square)) score += sign * 10;
+                    }
+                }
+                // Check status bonuses
+                if (game.in_check()) {
+                    score += game.turn() === 'w' ? -30 : 30;
+                }
+                // Game over states
+                if (game.in_checkmate()) {
+                    return game.turn() === 'w' ? -Infinity : Infinity;
+                }
+                return score;
+            }
+
+            function scoreMoveHeuristic(move) {
+                let score = 0;
+                // Captures are good
+                if (move.captured) score += 1000;
+                // Checks are good
+                if (move.san.includes('+') || move.san.includes('#')) score += 800;
+                // Promote is great
+                if (move.promotion) score += 1200;
+                // Center moves
+                if (['d4','e4','d5','e5'].includes(move.to)) score += 50;
+                return score;
             }
 
             /**
@@ -992,17 +1146,8 @@
                 console.log('Board reset. All states cleared.');
             });
 
-            $startTwoPlayerBtn.on('click', () => {
-                if (currentMoveIndex < currentOpeningMoves.length) {
-                    updateStatus("Two-Player Mode can only be started after book moves are complete!", false);
-                    return;
-                }
-                twoPlayerModeActive = true; 
-                $startTwoPlayerBtn.hide(); 
-                console.log('Transitioned to Two-Player Mode.');
-                updateStatus(`Two-Player Mode Activated! Player ${game.turn() === 'w' ? 'White' : 'Black'}'s turn.`, true);
-                displayEvaluation(null, null, null);
-            });
+                        // Two-Player Mode button is now hidden and unused since we continue with computer
+            // $startTwoPlayerBtn.on('click', () => { ... });
 
             $(window).resize(() => {
                 // No-op
