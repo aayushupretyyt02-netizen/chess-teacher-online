@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate AI Chess Analyzer</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #202225; --bg-medium: #2f3136; --bg-light: #36393f;
+            --primary-text: #dcddde; --secondary-text: #b9bbbe; --border-color: #40444b;
+            --green: #43b581; --red: #f04747; --blue: #5865f2; --purple: #9b59b6;
+            --white-advantage: #f0d9b5; --black-advantage: #4a4a4a;
+        }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: 'Poppins', sans-serif; background-color: var(--bg-dark);
+            color: var(--primary-text); display: flex; flex-direction: column;
+        }
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; background-color: var(--bg-medium);
+            padding: 10px 24px; font-size: 18px; font-weight: bold; z-index: 1000;
+            display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-sizing: border-box; flex-shrink: 0;
+        }
+        #header-text { padding: 5px 12px; border-radius: 5px; margin-left: 10px; font-size: 16px; }
+        .main-container { 
+            display: flex; gap: 24px; padding: 24px; justify-content: center; align-items: flex-start;
+            flex-grow: 1; margin-top: 60px;
+        }
+        .left-panel, .right-panel, .center-panel { display: flex; flex-direction: column; gap: 20px; }
+        .left-panel { flex: 1 1 350px; }
+        .center-panel { flex: 0 1 500px; }
+        .right-panel { flex: 1 1 350px; }
+        .widget { background-color: var(--bg-light); padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        h2, h3 { border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-top: 0; }
+        .board-wrapper { display: flex; gap: 10px; }
+        #board-container { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1 / 1; }
+        #board { width: 100%; height: 100%; }
+        #arrows-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #eval-bar-container { position: relative; width: 20px; background-color: var(--black-advantage); border: 1px solid var(--border-color); display: flex; flex-direction: column-reverse; border-radius: 5px; overflow: hidden; }
+        #eval-bar-white { background-color: var(--white-advantage); width: 100%; height: 50%; transition: height 0.3s ease-in-out; }
+        .arrow-green { stroke: var(--green); } .arrow-red { stroke: var(--red); }
+        .highlight-green { box-shadow: inset 0 0 3px 5px rgba(67, 181, 129, 0.7); } .highlight-red { box-shadow: inset 0 0 3px 5px rgba(240, 71, 71, 0.7); }
+        #controls { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        #board-navigation { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        button { padding: 10px 15px; cursor: pointer; background-color: var(--blue); color: white; border: none; border-radius: 5px; font-weight: bold; transition: background-color 0.2s; }
+        button:hover { background-color: #7289da; } button:disabled { background-color: #7f8c8d; cursor: not-allowed; }
+        #resetBtn { background-color: var(--green); display: none; }
+        textarea { width: 100%; box-sizing: border-box; height: 80px; font-family: monospace; background-color: var(--bg-medium); color: var(--primary-text); border: 1px solid var(--border-color); border-radius: 5px; }
+        #analysis-output { 
+            background-color: var(--bg-medium); border: 1px solid var(--border-color); padding: 10px; border-radius: 5px; 
+            overflow-y: auto; height: 350px;
+        }
+        .move-info { padding: 8px; cursor: pointer; border-radius: 4px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; transition: background-color 0.2s; }
+        .move-info-main { display: flex; align-items: center; gap: 8px; width: 100%; }
+        .move-info:hover, .move-info.active { background-color: #40444b; }
+        .best-move-suggestion { font-size: 12px; color: var(--green); padding-left: 25px; }
+        .classification-tag, #header-text { font-size: 12px; font-weight: bold; padding: 2px 6px; border-radius: 4px; color: white; margin-left: auto; }
+        .book-move { background-color: #95a5a6; } .best-move { background-color: var(--purple); } .good-move { background-color: var(--green); }
+        .inaccuracy { background-color: #f1c40f; } .mistake { background-color: #e67e22; } .blunder { background-color: var(--red); }
+        #progress-container { display: none; }
+        #accuracy-scores { display: flex; justify-content: space-around; font-size: 18px; font-weight: 600; }
+        #chart-container { height: 150px; }
+        body.analysis-active .widget-input { display: none; }
+        footer { text-align: center; padding: 20px; background-color: var(--bg-medium); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+        footer a { color: var(--blue); text-decoration: none; font-weight: bold; }
+        footer a:hover { text-decoration: underline; }
+        @media (max-width: 1200px) {
+            .main-container { flex-direction: column; align-items: center; padding: 15px; }
+            .left-panel, .center-panel, .right-panel { display: contents; }
+            .left-panel > *, .center-panel > *, .right-panel > * { width: 100%; max-width: 600px; box-sizing: border-box; margin-bottom: 20px; }
+            body { padding-top: 50px; }
+            header { padding: 10px 15px; font-size: 16px; }
+            .widget-input { order: 1; } .widget-board-nav { order: 2; } .widget-board { order: 3; }
+            .widget-coach { order: 4; } .widget-movelist { order: 5; } .widget-summary { order: 6; }
+            .widget-chart { order: 7; } .widget-accuracy { order: 8; }
+            body.analysis-active .widget-board-nav { order: 1; } body.analysis-active .widget-board { order: 2; }
+            body.analysis-active .widget-coach { order: 3; } body.analysis-active .widget-movelist { order: 4; }
+            .widget-accuracy { display: none; }
+            #analysis-output { height: 250px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header id="fixed-header">
+        🚀 AI Chess Analyzer: <span id="header-text">-</span>
+    </header>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="widget widget-movelist">
+                <h3>Move by Move</h3>
+                <div id="analysis-output">Please paste a PGN and click Analyze.</div>
+            </div>
+        </div>
+        <div class="center-panel">
+            <div class="widget widget-input">
+                <h2>PGN Input</h2>
+                <textarea id="pgnInput" placeholder="Paste your PGN here..."></textarea>
+                <div id="controls">
+                    <button id="analyzeBtn">Analyze Game</button>
+                    <button id="resetBtn">Analyze New Game</button>
+                    <button id="copyFenBtn">Copy FEN</button>
+                    <button id="copyPgnBtn">Copy PGN</button>
+                </div>
+                <div id="progress-container">
+                    <div id="progress-text">Analyzing...</div>
+                    <div id="progress-bar-outline"><div id="progress-bar"></div></div>
+                </div>
+            </div>
+            <div class="widget-board-nav">
+                <div id="board-navigation">
+                    <button id="prevBtn" disabled>← Prev</button>
+                    <button id="nextBtn" disabled>Next →</button>
+                </div>
+            </div>
+            <div class="widget widget-board">
+                <div class="board-wrapper">
+                    <div id="board-container">
+                        <div id="board"></div>
+                        <svg id="arrows-svg"></svg>
+                    </div>
+                    <div id="eval-bar-container"><div id="eval-bar-white"></div></div>
+                </div>
+            </div>
+            <div class="widget widget-chart">
+                <h3>📈 Evaluation Chart</h3>
+                <div id="chart-container"><canvas id="eval-chart"></canvas></div>
+            </div>
+            <div class="widget widget-accuracy">
+                <h3>🎯 Accuracy</h3>
+                <div id="accuracy-scores">
+                    <span id="white-accuracy">White: -%</span>
+                    <span id="black-accuracy">Black: -%</span>
+                </div>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="widget widget-coach">
+                <h3>🤖 AI Coach Says:</h3>
+                <p id="coach-explanation">Analyze a game to get coaching advice.</p>
+            </div>
+            <div class="widget widget-summary">
+                <h4>Analysis Summary</h4>
+                <div id="summary-content">Analysis has not run yet.</div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>
+            <a href="https://aayushupretyyt02-netizen.github.io/chess-teacher-online/" target="_blank">
+                <strong>Become an Openings Master!</strong> Master 100+ chess openings with our interactive Chess Teacher.
+            </a>
+        </p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <!-- Is file ko neeche diye gaye JavaScript code se banayein -->
+    <script src="script.js"></script>
+</body>
+</html>
+ 
