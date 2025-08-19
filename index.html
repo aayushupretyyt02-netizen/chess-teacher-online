@@ -16,11 +16,11 @@
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 md:p-6">
+<body class="flex flex-col items-center min-h-screen p-4 md:p-6">
 
     <div class="aurora-background"></div>
     <main class="main-container w-full max-w-7xl mx-auto">
@@ -35,38 +35,38 @@
                 <h2 id="training-setup-heading" class="text-2xl font-bold mb-5 border-b border-slate-700 pb-3 text-white">Training Setup</h2>
 
                 <div class="space-y-5">
-                    <!-- CATEGORY DROPDOWN -->
                     <div class="form-group">
                         <label for="category-select" class="block text-sm font-medium text-slate-300 mb-2">Choose a Category:</label>
                         <select id="category-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select an opening category"></select>
                     </div>
-                    <!-- OPENING DROPDOWN -->
                     <div class="form-group">
                         <label for="opening-select" class="block text-sm font-medium text-slate-300 mb-2">Choose an Opening:</label>
                         <select id="opening-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select an opening"></select>
                     </div>
-                    <!-- NEW VARIATION DROPDOWN -->
                     <div class="form-group">
                         <label for="variation-select" class="block text-sm font-medium text-slate-300 mb-2">Choose a Variation:</label>
                         <select id="variation-select" class="form-select w-full p-2.5 rounded-lg text-white" aria-label="Select an opening variation"></select>
                     </div>
+                    <div class="form-group">
+                        <label for="elo-slider" class="block text-sm font-medium text-slate-300 mb-2">Bot Strength (Elo): <span id="elo-value" class="font-bold text-white">1400</span></label>
+                        <input type="range" id="elo-slider" min="0" max="3200" value="1400" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
                 </div>
                 <div class="button-grid mt-6">
                     <button id="start-btn" class="btn start-btn w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg" role="button">Start Practice</button>
-                    <button id="undo-btn" class="btn undo-btn w-full py-3 px-4 rounded-lg font-semibold text-white" role="button">Undo Last Move</button>
                     <button id="reset-btn" class="btn w-full py-3 px-4 rounded-lg font-semibold text-white" role="button">Reset Board</button>
                     <button id="start-bot-btn" class="btn start-bot-btn w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg col-span-2" style="display: none;" role="button">Start Two-Player Mode</button>
                 </div>
             </section>
 
             <section class="board-section" aria-labelledby="game-status-heading">
-                        <div id="status" class="w-full p-4 mb-4 bg-slate-800 rounded-lg text-center shadow-md">
-            <h2 id="game-status-heading" class="sr-only">Game Status</h2>
-            <p class="font-semibold text-xl" id="status-opening">Welcome!</p>
-            <p class="text-md text-slate-400" id="status-move">Select an opening and start your practice.</p>
-            <div id="evaluation-display" class="mt-2 text-sm"></div>
-            <div id="selection-info" class="mt-2 text-sm text-blue-400" style="display: none;"></div>
-        </div>
+                <div id="status" class="w-full p-4 mb-4 bg-slate-800 rounded-lg text-center shadow-md">
+                    <h2 id="game-status-heading" class="sr-only">Game Status</h2>
+                    <p class="font-semibold text-xl" id="status-opening">Welcome!</p>
+                    <p class="text-md text-slate-400" id="status-move">Select an opening and start your practice.</p>
+                    <div id="evaluation-display" class="mt-2 text-sm"></div>
+                    <div id="selection-info" class="mt-2 text-sm text-blue-400" style="display: none;"></div>
+                </div>
                 <div class="board-container">
                     <div id="myBoard" class="w-full rounded-lg shadow-2xl"></div>
                     <div class="tips-section">
@@ -78,11 +78,17 @@
         </div>
     </main>
 
-
-
+    <footer class="site-footer">
+        <h2 class="footer-heading">Finished Your Training?</h2>
+        <p class="footer-subheading">Take your game to the next level.</p>
+        <a href="/frontend/index.html" class="footer-cta-button" target="_blank">
+            Analyze Your Games Now
+        </a>
+    </footer>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
     <script type="module" src="script.js"></script>
 </body>
 </html>

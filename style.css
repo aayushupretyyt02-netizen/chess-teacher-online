@@ -615,7 +615,53 @@
             z-index: 1;
         }
         
+  /* === NEW ATTRACTIVE FOOTER STYLE === */
+.site-footer {
+    width: 100%;
+    max-width: 800px; /* Constrained width for better readability */
+    position: relative;
+    z-index: 1;
+    margin: 4rem auto 2rem; /* More space above and below */
+    padding: 2.5rem; /* More padding */
+    text-align: center;
+    background: rgba(30, 41, 59, 0.7); /* Subtle background */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem; /* Rounded corners */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
 
+.footer-heading {
+    font-size: clamp(1.75rem, 5vw, 2.5rem); /* Big font */
+    font-weight: 700; /* Bold */
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
 
-        
-        
+.footer-subheading {
+    font-size: clamp(1rem, 3vw, 1.125rem);
+    color: #cbd5e1; /* Lighter text color */
+    margin: 0 0 1.5rem 0; /* Space before the button */
+}
+
+.footer-cta-button {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 1.1rem; /* Larger button text */
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%); /* Beautiful blue gradient */
+    padding: 0.8rem 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(26, 115, 232, 0.4);
+    transition: all 0.2s ease-in-out;
+}
+
+.footer-cta-button:hover {
+    transform: translateY(-3px); /* Slight lift on hover */
+    box-shadow: 0 12px 30px -5px rgba(26, 115, 232, 0.6);
+    background: linear-gradient(135deg, #4285f4 0%, #5a9cff 100%);
+}
+/* === FOOTER STYLE END === */
