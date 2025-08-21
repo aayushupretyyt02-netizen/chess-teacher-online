@@ -425,9 +425,9 @@ $(function () {
                 },
                 body: JSON.stringify({
                     fen: fen,
-                    elo: elo, // Send the Elo rating
-                    movetime: 2000, // 10 second thinking time
-                    depth: 15
+                    elo: 3200, // Send the Elo rating
+                    movetime: 3000, // 3 second thinking time
+                    depth: 18
                 }),
             });
 
