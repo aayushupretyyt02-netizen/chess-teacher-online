@@ -418,7 +418,7 @@ $(function () {
     async function getBestMoveFromServer(fen, elo) {
         updateStatus('Bot is thinking...', null);
         try {
-            const response = await fetch('http://localhost:3000/best-move', {
+            const response = await fetch('https://chess-bot-ypuu.onrender.com/best-move', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -426,7 +426,8 @@ $(function () {
                 body: JSON.stringify({
                     fen: fen,
                     elo: elo, // Send the Elo rating
-                    movetime: 1000 // 1 second thinking time
+                    movetime: 2000, // 10 second thinking time
+                    depth: 15
                 }),
             });
 
